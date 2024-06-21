@@ -101,19 +101,21 @@ def atualizar_status(tarefa_id, var, data_str):
     today = datetime.now().date()
     if var.get() == "on":
         status = "Concluído"
-        data_termino = datetime.strptime(data_str, '%Y-%m-%d').date()
+        data_termino = today 
     else:
         status = "Em andamento" if datetime.fromisoformat(data_str).date() == today else "A fazer"
         data_termino = None 
 
     connection = create_connection()
-    query = f"""
+    query = """
     UPDATE tarefas 
-    SET status = '{status}', data_termino = '{data_termino}'
-    WHERE id = {tarefa_id}
+    SET status = %s, data_termino = %s
+    WHERE id = %s
     """
     try:
-        execute_query(connection, query)
+        cursor = connection.cursor()
+        cursor.execute(query, (status, data_termino, tarefa_id))
+        connection.commit()
         print("Status e data de término atualizados com sucesso")
     except Error as e:
         print(f"O erro '{e}' ocorreu ao atualizar o status e a data de término")
@@ -126,7 +128,7 @@ def atualizar_status(tarefa_id, var, data_str):
     else:
         var.set("off")
         checkboxes[tarefa_id].deselect()
-        
+
 # Função para remover uma tarefa
 def remover_tarefa(tarefa_id):
     connection = create_connection()
